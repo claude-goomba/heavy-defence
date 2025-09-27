@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Heavy Defence DLC</title>
+  <style>
+    body { background: #222; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+    #root { max-width: 600px; margin: 30px auto; background: #333; border-radius: 16px; padding: 24px; box-shadow: 0 4px 24px #0008; }
+    h1 { color: #efc050; text-align: center; }
+    .info { background: #232b3a; border-radius: 8px; padding: 16px; margin-bottom: 18px; font-size: 1.1em; }
+    .dlc-list { margin-top: 18px; }
+    .dlc-item { background: #181f2a; border-radius: 8px; padding: 12px; margin-bottom: 10px; color: #efc050; font-size: 1em; }
+    /* Download/Paywall Screen */
+    #downloadScreen { position:fixed; top:0; left:0; width:100vw; height:100vh; background:#181818e0; z-index:5000; display:none; align-items:center; justify-content:center; }
+    #downloadScreen .content { background:#232b3a; padding:32px 40px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:340px; }
+    #downloadScreen h2 { color:#efc050; margin-bottom:18px; }
+    #downloadScreen .price { color:#fff; font-size:1.1em; margin-bottom:18px; }
+    #downloadScreen button { padding:10px 28px; border-radius:8px; border:none; font-size:1.1em; cursor:pointer; margin-bottom:10px; }
+    #downloadScreen .btn-game { background:#45b8ac; color:#fff; font-weight:bold; }
+    #downloadScreen .btn-dlc { background:#efc050; color:#222; font-weight:bold; }
+    #downloadScreen #downloadMsg { margin-top:18px; color:#efc050; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <!-- Download/Paywall Screen -->
+  <div id="downloadScreen">
+    <div class="content">
+      <h2>Download Heavy Defence</h2>
+      <div class="price">Base Game: <strong>$10</strong><br>DLC: <strong>$5</strong></div>
+      <a href="payment.html"><button class="btn-game">Buy Full Game for $10</button></a>
+      <a href="payment.html"><button class="btn-dlc">Buy DLC for $5</button></a>
+      <div id="downloadMsg"></div>
+    </div>
+  </div>
+
+  <div id="root">
+    <h1>Heavy Defence DLC</h1>
+    <div class="info">
+      Welcome to the Heavy Defence DLC!<br>
+      Discover new towers, enemies, and features to expand your game experience.
+    </div>
+    <div class="dlc-list">
+      <div class="dlc-item">New Tower: Catapult</div>
+      <div class="dlc-item">New Enemy: Dragon</div>
+      <div class="dlc-item">Special Ability: Meteor Strike</div>
+      <div class="dlc-item">Bonus Map: The Fortress</div>
+      <div class="dlc-item">Battle Royale Mode: Fight to the death using any card!<br>
+        <span style="color:#fff;font-size:0.95em;">Select multiple tower cards and battle waves of enemies until only one team remains. Last team standing wins!</span>
+        <button onclick="startBattleRoyale()" style="margin-top:10px;padding:8px 18px;border-radius:8px;background:#efc050;color:#222;font-weight:bold;border:none;cursor:pointer;">Play Battle Royale</button>
+        <div id="battleRoyaleSetup" style="margin-top:12px;display:none;background:#232b3a;padding:12px;border-radius:8px;">
+          <div style="margin-bottom:8px;color:#fff;">Choose your cards:</div>
+          <div id="cardSelection"></div>
+          <div style="margin-top:10px;color:#fff;">Pick your fighter:</div>
+          <select id="playerCard" style="margin-top:4px;padding:4px 10px;border-radius:6px;"></select>
+          <button onclick="beginBattleRoyale()" style="margin-top:10px;padding:7px 16px;border-radius:8px;background:#45b8ac;color:#fff;font-weight:bold;border:none;cursor:pointer;">Begin!</button>
+        </div>
+        <div id="battleRoyaleGame" style="margin-top:12px;display:none;background:#181f2a;padding:12px;border-radius:8px;color:#fff;">
+          <canvas id="battleCanvas" width="600" height="220" style="display:block;margin:0 auto 18px auto;background:#232b3a;border-radius:12px;"></canvas>
+          <div id="playerControls" style="text-align:center;margin-bottom:12px;display:none;"></div>
+          <div id="battleLog"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // DLC Battle Royale Mode
+    const allCards = [
+      'Archer', 'Swordsman', 'Spearman', 'Knight', 'Arrow Launcher', 'Crossbow', 'Mage', 'Frost Mage', 'Cannon', 'Bombard', 'Ballista', 'Double Cannon', 'Heavy Swordsman', 'Heavy Archer', 'Catapult'
+    ];
+    function startBattleRoyale() {
+      if (!checkPayment()) return;
+      document.getElementById('battleRoyaleSetup').style.display = 'block';
+      document.getElementById('battleRoyaleGame').style.display = 'none';
+      // Render card selection checkboxes
+      const cardSel = document.getElementById('cardSelection');
+      cardSel.innerHTML = allCards.map(card => `<label style='margin-right:12px;'><input type='checkbox' value='${card}' onchange='updatePlayerCardOptions()'> <span style='display:inline-flex;align-items:center;gap:4px;'>${getCardIcon(card)} ${card}</span></label>`).join(' ');
+      updatePlayerCardOptions();
+    }
+    function updatePlayerCardOptions() {
+      const selected = Array.from(document.querySelectorAll('#cardSelection input:checked')).map(cb => cb.value);
+      const playerCardSel = document.getElementById('playerCard');
+      playerCardSel.innerHTML = selected.length ? selected.map(card => `<option value="${card}">${card}</option>`).join('') : '<option value="">(Select your fighter)</option>';
+    }
+    function getCardIcon(card) {
+      // Simple SVG icons for each card
+      if(card==='Archer') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#6b5b95'/><rect x='16' y='8' width='5' height='2' fill='#efc050'/></svg>`;
+      if(card==='Swordsman') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#45b8ac'/><rect x='16' y='16' width='6' height='2' fill='#fff'/></svg>`;
+      if(card==='Spearman') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#2196f3'/><line x1='12' y1='5' x2='12' y2='19' stroke='#fff' stroke-width='2'/></svg>`;
+      if(card==='Knight') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#1976d2'/><rect x='16' y='8' width='5' height='2' fill='#efc050'/></svg>`;
+      if(card==='Arrow Launcher') return `<svg width='24' height='24'><rect x='5' y='5' width='14' height='14' fill='#efc050'/><rect x='10' y='10' width='3' height='8' fill='#6b5b95'/></svg>`;
+      if(card==='Crossbow') return `<svg width='24' height='24'><rect x='4' y='7' width='16' height='10' fill='#b39ddb'/><rect x='10' y='4' width='3' height='16' fill='#efc050'/></svg>`;
+      if(card==='Mage') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#f44336'/><circle cx='12' cy='12' r='5' fill='#fff'/></svg>`;
+      if(card==='Frost Mage') return `<svg width='24' height='24'><circle cx='12' cy='12' r='9' fill='#2196f3'/><circle cx='12' cy='12' r='5' fill='#fff'/></svg>`;
+      if(card==='Cannon') return `<svg width='24' height='24'><ellipse cx='12' cy='18' rx='9' ry='6' fill='#888'/><rect x='10' y='4' width='3' height='12' fill='#333'/></svg>`;
+      if(card==='Bombard') return `<svg width='24' height='24'><ellipse cx='12' cy='18' rx='9' ry='6' fill='#888'/><rect x='6' y='4' width='3' height='12' fill='#333'/><rect x='15' y='4' width='3' height='12' fill='#333'/></svg>`;
+      if(card==='Ballista') return `<svg width='24' height='24'><rect x='5' y='5' width='14' height='14' fill='#6b5b95'/><line x1='12' y1='5' x2='12' y2='19' stroke='#efc050' stroke-width='2'/></svg>`;
+      if(card==='Double Cannon') return `<svg width='24' height='24'><ellipse cx='12' cy='18' rx='9' ry='6' fill='#888'/><rect x='6' y='4' width='3' height='12' fill='#333'/><rect x='15' y='4' width='3' height='12' fill='#333'/></svg>`;
+      if(card==='Heavy Swordsman') return `<svg width='24' height='24'><circle cx='12' cy='12' r='10' fill='#b8860b'/><rect x='15' y='12' width='7' height='3' fill='#fff'/></svg>`;
+      if(card==='Heavy Archer') return `<svg width='24' height='24'><circle cx='12' cy='12' r='10' fill='#1976d2'/><rect x='15' y='8' width='7' height='3' fill='#efc050'/></svg>`;
+      if(card==='Catapult') return `<svg width='24' height='24'><ellipse cx='12' cy='18' rx='9' ry='6' fill='#efc050'/><rect x='10' y='4' width='4' height='10' fill='#45b8ac'/></svg>`;
+      return '';
+    }
+    let battleRoyaleState = null;
+    function beginBattleRoyale() {
+      const selected = Array.from(document.querySelectorAll('#cardSelection input:checked')).map(cb => cb.value);
+      const playerCard = document.getElementById('playerCard').value;
+      if (selected.length === 0) {
+        alert('Select at least one card!');
+        return;
+      }
+      if (!playerCard) {
+        alert('Pick your fighter!');
+        return;
+      }
+      document.getElementById('battleRoyaleSetup').style.display = 'none';
+      document.getElementById('battleRoyaleGame').style.display = 'block';
+      let teams = selected.map(card => ({ name: card, hp: 100, alive: true, isPlayer: card === playerCard }));
+      let zombies = Array.from({length: Math.max(3, teams.length+2)}, (_,i) => ({ name: 'Zombie '+(i+1), hp: 80, alive: true }));
+      let round = 1;
+      battleRoyaleState = { teams, zombies, round, waitingForPlayer: false };
+      renderBattleView(teams, zombies);
+      let log = `<strong>Battle Royale vs Zombies Begins!</strong><br>`;
+      document.getElementById('battleLog').innerHTML = log;
+      setTimeout(()=>runBattleRoyale(), 800);
+    }
+    function renderBattleView(teams, zombies, attackInfo) {
+      const canvas = document.getElementById('battleCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Draw base wall
+      ctx.fillStyle = '#333';
+      ctx.fillRect(0,canvas.height-40,canvas.width,40);
+      // Draw teams
+      const spacing = Math.min(100, (canvas.width-40)/teams.length);
+      teams.forEach((team, i) => {
+        const x = 30 + i*spacing;
+        const y = 60;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 32, 0, 2*Math.PI);
+        ctx.fillStyle = team.isPlayer ? '#efc050' : '#45b8ac';
+        ctx.globalAlpha = team.alive ? 1 : 0.3;
+        ctx.fill();
+        ctx.lineWidth = team.isPlayer ? 4 : 2;
+        ctx.strokeStyle = team.isPlayer ? '#fff' : '#232b3a';
+        ctx.stroke();
+        ctx.restore();
+        ctx.font = 'bold 1em Segoe UI';
+        ctx.fillStyle = team.isPlayer ? '#efc050' : '#fff';
+        ctx.textAlign = 'center';
+        ctx.fillText(team.name, x, y-38);
+        ctx.font = 'bold 1.1em Segoe UI';
+        ctx.fillStyle = team.alive ? '#fff' : '#b3b3b3';
+        ctx.fillText('HP: '+Math.max(0,team.hp), x, y+48);
+        if (!team.alive) {
+          ctx.font = 'bold 1em Segoe UI';
+          ctx.fillStyle = '#b3b3b3';
+          ctx.fillText('Eliminated', x, y+68);
+        }
+        if (attackInfo && attackInfo.attacker === team.name && team.alive) {
+          ctx.save();
+          ctx.strokeStyle = '#efc050';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(attackInfo.targetX, attackInfo.targetY);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+      // Draw zombies
+      const zSpacing = Math.min(80, (canvas.width-40)/zombies.length);
+      zombies.forEach((z, i) => {
+        const x = 30 + i*zSpacing;
+        const y = 170;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 28, 0, 2*Math.PI);
+        ctx.fillStyle = '#7ec850';
+        ctx.globalAlpha = z.alive ? 1 : 0.3;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#232b3a';
+        ctx.stroke();
+        ctx.restore();
+        ctx.font = 'bold 1em Segoe UI';
+        ctx.fillStyle = '#7ec850';
+        ctx.textAlign = 'center';
+        ctx.fillText(z.name, x, y-32);
+        ctx.font = 'bold 1.1em Segoe UI';
+        ctx.fillStyle = z.alive ? '#fff' : '#b3b3b3';
+        ctx.fillText('HP: '+Math.max(0,z.hp), x, y+38);
+        if (!z.alive) {
+          ctx.font = 'bold 1em Segoe UI';
+          ctx.fillStyle = '#b3b3b3';
+          ctx.fillText('Defeated', x, y+58);
+        }
+        if (attackInfo && attackInfo.target === z.name && z.alive) {
+          ctx.save();
+          ctx.strokeStyle = '#efc050';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(attackInfo.attackerX, attackInfo.attackerY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
+    }
+    function runBattleRoyale() {
+      let { teams, zombies, round, waitingForPlayer } = battleRoyaleState;
+      if (teams.filter(t => t.alive).length === 0 || zombies.filter(z => z.alive).length === 0 || round > 20) {
+        renderBattleView(teams, zombies);
+        let winMsg = zombies.filter(z => z.alive).length === 0
+          ? `<div style='margin-top:18px;font-size:1.3em;color:#efc050;font-weight:bold;'>🏆 All zombies defeated! You win!</div>`
+          : `<div style='margin-top:18px;font-size:1.3em;color:#efc050;font-weight:bold;'>Zombies win! All fighters defeated.</div>`;
+        document.getElementById('playerControls').style.display = 'none';
+        document.getElementById('battleLog').innerHTML += winMsg;
+        return;
+      }
+      let roundLog = `<strong>Round ${round}</strong><br>`;
+      let player = teams.find(t => t.isPlayer && t.alive);
+      if (player) {
+        // Player chooses zombie target
+        let targets = zombies.filter(z => z.alive);
+        if (targets.length === 0) return;
+        document.getElementById('playerControls').style.display = 'block';
+        document.getElementById('playerControls').innerHTML =
+          `<span style='color:#efc050;font-weight:bold;'>Your turn! Choose a zombie to attack:</span><br>` +
+          targets.map(z => `<button style='margin:6px 10px;padding:7px 16px;border-radius:8px;background:#45b8ac;color:#fff;font-weight:bold;border:none;cursor:pointer;' onclick='battleRoyalePlayerAttack("${z.name}")'>${z.name}</button>`).join('');
+        battleRoyaleState.waitingForPlayer = true;
+        return;
+      } else {
+        document.getElementById('playerControls').style.display = 'none';
+      }
+      // AI attacks zombies
+      teams.forEach((team, i) => {
+        if (!team.alive) return;
+        let targets = zombies.filter(z => z.alive);
+        if (targets.length === 0) return;
+        let target = targets[Math.floor(Math.random() * targets.length)];
+        let dmg = Math.floor(Math.random() * 30) + 10;
+        target.hp -= dmg;
+        roundLog += `<span style='color:#efc050;'>${team.name}</span> attacks <span style='color:#7ec850;'>${target.name}</span> for <span style='color:#fff;'>${dmg}</span> damage!<br>`;
+        if (target.hp <= 0) {
+          target.alive = false;
+          roundLog += `<span style='color:#7ec850;'>${target.name}</span> is defeated!<br>`;
+        }
+        // Attack animation
+        let attackerIdx = teams.findIndex(t => t.name === team.name);
+        let targetIdx = zombies.findIndex(z => z.name === target.name);
+        const spacing = Math.min(100, (600-40)/teams.length);
+        const zSpacing = Math.min(80, (600-40)/zombies.length);
+        let attackInfo = {
+          attacker: team.name,
+          attackerX: 30 + attackerIdx*spacing,
+          attackerY: 60,
+          target: target.name,
+          targetX: 30 + targetIdx*zSpacing,
+          targetY: 170
+        };
+        renderBattleView(teams, zombies, attackInfo);
+      });
+      // Zombies attack back
+      zombies.forEach((zombie, i) => {
+        if (!zombie.alive) return;
+        let targets = teams.filter(t => t.alive);
+        if (targets.length === 0) return;
+        let target = targets[Math.floor(Math.random() * targets.length)];
+        let dmg = Math.floor(Math.random() * 20) + 5;
+        target.hp -= dmg;
+        roundLog += `<span style='color:#7ec850;'>${zombie.name}</span> attacks <span style='color:#efc050;'>${target.name}</span> for <span style='color:#fff;'>${dmg}</span> damage!<br>`;
+        if (target.hp <= 0) {
+          target.alive = false;
+          roundLog += `<span style='color:#efc050;'>${target.name}</span> is eliminated!<br>`;
+        }
+        // Attack animation
+        let attackerIdx = zombies.findIndex(z => z.name === zombie.name);
+        let targetIdx = teams.findIndex(t => t.name === target.name);
+        const spacing = Math.min(100, (600-40)/teams.length);
+        const zSpacing = Math.min(80, (600-40)/zombies.length);
+        let attackInfo = {
+          attacker: zombie.name,
+          attackerX: 30 + attackerIdx*zSpacing,
+          attackerY: 170,
+          target: target.name,
+          targetX: 30 + targetIdx*spacing,
+          targetY: 60
+        };
+        renderBattleView(teams, zombies, attackInfo);
+      });
+      renderBattleView(teams, zombies);
+      document.getElementById('battleLog').innerHTML += `<div style='margin-top:10px;'>${roundLog}</div>`;
+      battleRoyaleState.round++;
+      setTimeout(()=>runBattleRoyale(), 1200);
+    }
+    function battleRoyalePlayerAttack(zombieName) {
+      let { teams, zombies, round } = battleRoyaleState;
+      let player = teams.find(t => t.isPlayer && t.alive);
+      let target = zombies.find(z => z.name === zombieName && z.alive);
+      if (!player || !target) return;
+      let dmg = Math.floor(Math.random() * 30) + 10;
+      target.hp -= dmg;
+      let roundLog = `<span style='color:#45b8ac;'>You (${player.name})</span> attack <span style='color:#7ec850;'>${target.name}</span> for <span style='color:#fff;'>${dmg}</span> damage!<br>`;
+      if (target.hp <= 0) {
+        target.alive = false;
+        roundLog += `<span style='color:#7ec850;'>${target.name}</span> is defeated!<br>`;
+      }
+      // Attack animation
+      let attackerIdx = teams.findIndex(t => t.name === player.name);
+      let targetIdx = zombies.findIndex(z => z.name === target.name);
+      const spacing = Math.min(100, (600-40)/teams.length);
+      const zSpacing = Math.min(80, (600-40)/zombies.length);
+      let attackInfo = {
+        attacker: player.name,
+        attackerX: 30 + attackerIdx*spacing,
+        attackerY: 60,
+        target: target.name,
+        targetX: 30 + targetIdx*zSpacing,
+        targetY: 170
+      };
+      renderBattleView(teams, zombies, attackInfo);
+      document.getElementById('battleLog').innerHTML += `<div style='margin-top:10px;'>${roundLog}</div>`;
+      document.getElementById('playerControls').style.display = 'none';
+      battleRoyaleState.round++;
+      battleRoyaleState.waitingForPlayer = false;
+      setTimeout(()=>runBattleRoyale(), 1200);
+    }
+
+    /* Download/Paywall Screen Script */
+    let hasGame = false, hasDLC = false;
+    function payForGame() {
+      hasGame = true;
+      document.getElementById('downloadMsg').textContent = 'Game purchased! You can now play Heavy Defence.';
+      setTimeout(()=>{
+        document.getElementById('downloadScreen').style.display = 'none';
+      }, 1200);
+    }
+    function payForDLC() {
+      if (!hasGame) {
+        document.getElementById('downloadMsg').textContent = 'You must buy the game first!';
+        return;
+      }
+      hasDLC = true;
+      document.getElementById('downloadMsg').textContent = 'DLC purchased! Extra content unlocked.';
+      setTimeout(()=>{
+        document.getElementById('downloadScreen').style.display = 'none';
+      }, 1200);
+    }
+    // On page load, show paywall
+    window.onload = function() {
+  document.getElementById('downloadScreen').style.display = 'flex';
+    };
+
+    // Lock gameplay and DLC features until payment is made
+    function checkPayment() {
+      // Demo: Always show paywall
+      document.getElementById('downloadScreen').style.display = 'flex';
+      return false;
+    }
+    function checkDLCPayment() {
+      // Demo: Always show paywall
+      document.getElementById('downloadScreen').style.display = 'flex';
+      return false;
+    }
+  </script>
+</body>
+</html>

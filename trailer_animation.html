@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Masters Game Trailer Animation</title>
+    <style>
+        body {
+            background: #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #trailer {
+            width: 400px;
+            height: 220px;
+            background: #222;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            font-family: 'Arial Black', Arial, sans-serif;
+        }
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            font-size: 1.6em;
+            transition: opacity 0.5s;
+        }
+        .scene2 { color: #ff6f61; }
+        .scene3 { flex-direction: column; font-size: 1.2em; }
+        .scene3 span:first-child { color: #efc050; font-size: 1.3em; }
+        .scene4 { color: #45b8ac; font-size: 2.2em; font-weight: bold; }
+        .scene5 { color: #fff; font-size: 1.2em; }
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="trailer">
+        <div class="scene scene1">Bloody War Erupts...</div>
+        <div class="scene scene2">Who Will Survive?</div>
+        <div class="scene scene3">
+            <span>Voting Begins</span>
+            <span style="margin-top:10px;">Alliances form. Betrayal is near.</span>
+        </div>
+        <div class="scene scene4">MASTERS</div>
+        <div class="scene scene5">Social Deduction Game</div>
+        <div class="footer">Get ready for the ultimate social deduction experience!</div>
+    </div>
+    <script>
+        const scenes = [
+            document.querySelector('.scene1'),
+            document.querySelector('.scene2'),
+            document.querySelector('.scene3'),
+            document.querySelector('.scene4'),
+            document.querySelector('.scene5')
+        ];
+        const timings = [0, 1800, 3500, 5200, 6700];
+        const durations = [1600, 1700, 1700, 1500, 2000];
+        let current = 0;
+        function showScene(idx) {
+            scenes.forEach((s, i) => s.style.opacity = i === idx ? 1 : 0);
+            if (idx < scenes.length - 1) {
+                setTimeout(() => showScene(idx + 1), durations[idx]);
+            }
+        }
+        setTimeout(() => showScene(0), 200);
+    </script>
+</body>
+</html>

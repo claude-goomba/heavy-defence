@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Heavy Defence - Super Curls Games</title>
+  <style>
+    body { background: #222; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+    #root { max-width: 600px; margin: 30px auto; background: #333; border-radius: 16px; padding: 24px; box-shadow: 0 4px 24px #0008; }
+    h1 { color: #efc050; text-align: center; }
+    .log { background: #222; border-radius: 8px; padding: 10px; height: 180px; overflow-y: auto; font-size: 1em; margin-bottom: 16px; }
+    .shop, .controls { margin-bottom: 18px; }
+    button { background: #45b8ac; color: #fff; border: none; border-radius: 8px; padding: 7px 16px; margin: 0 4px 8px 0; font-size: 1em; cursor: pointer; }
+    button:disabled { background: #555; }
+    .towers { margin-bottom: 10px; }
+    .enemy { display: inline-block; margin: 0 2px; color: #ff6f61; }
+    .tower { display: inline-block; margin: 0 2px; color: #6b5b95; }
+    .card-shop {
+      display: flex;
+      gap: 7px;
+      justify-content: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .card-shop-card {
+      background: #232b3a;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px #0006;
+      padding: 7px 5px 4px 5px;
+      min-width: 56px;
+      max-width: 60px;
+      text-align: center;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      border: 2px solid transparent;
+      font-size: 0.85em;
+    }
+    .card-shop-card:hover {
+      transform: scale(1.04);
+      box-shadow: 0 2px 8px #000a;
+      border: 2px solid #efc050;
+    }
+    .card-art {
+      margin-bottom: 2px;
+      min-height: 22px;
+    }
+    .card-name { font-weight: bold; font-size: 1em; color: #efc050; }
+    .card-cost { color: #45b8ac; font-size: 0.95em; margin-bottom: 1px; }
+    .card-desc { font-size: 0.85em; color: #b3b3b3; }
+    .special-shop {
+      min-height: 48px;
+      margin-top: 0;
+      margin-bottom: 18px;
+      align-items: center;
+    }
+    .upgrade-station {
+      min-height: 48px;
+      margin-top: 0;
+      margin-bottom: 18px;
+      align-items: center;
+      background: #2a2323;
+      border-radius: 14px;
+      padding: 14px 0;
+      box-shadow: 0 2px 8px #0004;
+      justify-content: center;
+      display: flex;
+      gap: 18px;
+    }
+    @keyframes introPop {
+      0% { transform: scale(0.7) translateY(60px); opacity: 0; }
+      60% { transform: scale(1.15) translateY(-10px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes introPop2 {
+      0% { transform: scale(0.7) translateY(60px); opacity: 0; }
+      60% { transform: scale(1.15) translateY(-10px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div style="text-align:center; margin-top:40px;">
+    <h2>Unlock Full Game</h2>
+    <p>The full game costs $10. Please purchase to continue.</p>
+    <a href="payment.html"><button>Buy Full Game for $10</button></a>
+  </div>
+  <div id="introOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#181818;z-index:3000;display:flex;align-items:center;justify-content:center;transition:opacity 0.7s;">
+    <canvas id="introCanvas" width="700" height="350" style="display:block;margin:auto;background:#181818;border-radius:18px;"></canvas>
+  </div>
+  <div id="root" style="opacity:0;transition:opacity 0.7s;">
+    <canvas id="gameCanvas" width="1000" height="300" style="background:#181818;border-radius:18px;display:block;margin:0 auto 32px auto;box-shadow:0 8px 32px #000a;"></canvas>
+    <!-- <h1>Heavy Defence</h1> -->
+    <div id="stats"></div>
+    <div id="money"></div>
+    <div class="controls">
+  <button onclick="placeTower('Archer')">Place Archer</button>
+  <button onclick="placeTower('Swordsman')">Place Swordsman</button>
+  <button onclick="placeTower('Spearman')">Place Spearman</button>
+  <button onclick="placeTower('Knight')">Place Knight</button>
+  <button onclick="placeTower('Arrow Launcher')">Place Arrow Launcher</button>
+  <button onclick="placeTower('Crossbow')">Place Crossbow</button>
+  <button onclick="placeTower('Mage')">Place Mage</button>
+  <button onclick="placeTower('Frost Mage')">Place Frost Mage</button>
+  <button onclick="placeTower('Cannon')">Place Cannon</button>
+  <button onclick="placeTower('Bombard')">Place Bombard</button>
+  <button onclick="placeTower('Ballista')">Place Ballista</button>
+  <button onclick="placeTower('Double Cannon')">Place Double Cannon</button>
+  <button onclick="placeTower('Heavy Swordsman')">Place Heavy Swordsman</button>
+  <button onclick="placeTower('Heavy Archer')">Place Heavy Archer</button>
+      <input id="posInput" type="number" min="0" max="10" value="5" style="width:50px;">
+    </div>
+    <div class="towers" id="towers"></div>
+    <div class="enemies" id="enemies"></div>
+    <div class="log" id="log"></div>
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="resetGame()">Reset</button>
+    <div class="card-shop" id="cardShop" style="display:flex;gap:18px;justify-content:center;margin-bottom:18px;"></div>
+    <div class="special-shop" id="specialShop" style="display:flex;gap:18px;justify-content:center;margin-bottom:18px;background:#181f2a;border-radius:14px;padding:14px 0;box-shadow:0 2px 8px #0004;min-height:48px;align-items:center;"></div>
+    <div class="upgrade-station" id="upgradeStation" style="display:flex;gap:18px;justify-content:center;margin-bottom:18px;background:#2a2323;border-radius:14px;padding:14px 0;box-shadow:0 2px 8px #0004;min-height:48px;align-items:center;">
+      <div style="color:#efc050;font-weight:bold;font-size:1.1em;margin-right:12px;align-self:center;">Upgrade Station</div>
+      <input id="upgradePos" type="number" min="0" max="10" value="5" style="width:50px;">
+      <button onclick="upgradeTower()">Upgrade Tower ($30)</button>
+    </div>
+    <div style="text-align:center;margin-top:18px;">
+      <a href="dlc.html" style="display:inline-block;text-decoration:none;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;background:#232b3a;padding:12px 28px;border-radius:14px;box-shadow:0 2px 12px #0006;transition:transform 0.15s;cursor:pointer;">
+          <svg width="48" height="48" style="vertical-align:middle;"><ellipse cx="24" cy="32" rx="18" ry="10" fill="#efc050"/><rect x="18" y="10" width="12" height="18" fill="#45b8ac"/><circle cx="24" cy="16" r="7" fill="#fff"/></svg>
+          <span style="color:#efc050;font-weight:bold;font-size:1.25em;">Check out the Heavy Defence DLC!</span>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div id="gameOver" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;color:#fff;font-size:2.5em;font-family:sans-serif;text-align:center;">
+    <div style="margin:auto;">
+      <div style="color:#efc050;font-size:2em;">Game Over!</div>
+      <div style="font-size:1em;margin:18px 0;">Your base was destroyed.</div>
+      <button onclick="resetGame()" style="font-size:1em;padding:10px 24px;border-radius:8px;background:#45b8ac;color:#fff;border:none;cursor:pointer;">Restart</button>
+    </div>
+  </div>
+  <script>
+  window.onload = function() {
+    // Animated intro logic (canvas-based)
+    const introCanvas = document.getElementById('introCanvas');
+    const ctx = introCanvas.getContext('2d');
+    const rootDiv = document.getElementById('root');
+    let introState = 0, introTime = 0, arrowX = 120, arrowY = 220, arrowV = 0, wallAlpha = 0, explosionR = 0, smokeAlpha = 0, heavyAlpha = 0;
+    // Wall bricks for explosion
+    let wallBricks = [];
+    function initWallBricks() {
+      wallBricks = [];
+      for(let y=0;y<2;y++) for(let x=0;x<4;x++) {
+        wallBricks.push({
+          x: 250+x*50+25, y: 180+y*30+15, // center of brick
+          vx: 0, vy: 0, // velocity
+          exploded: false
+        });
+      }
+    }
+    function drawIntro() {
+      ctx.clearRect(0,0,700,350);
+      // Background vignette
+      let bgGrad = ctx.createRadialGradient(350,175,80,350,175,350);
+      bgGrad.addColorStop(0,'#232323');
+      bgGrad.addColorStop(1,'#181818');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0,0,700,350);
+      // 1. Show text (with glow)
+      if (introState === 0) {
+        ctx.save();
+        ctx.font = 'bold 2.5em Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = Math.min(1, introTime/30);
+        ctx.shadowColor = '#efc050';
+        ctx.shadowBlur = 32;
+        ctx.fillStyle = '#efc050';
+        ctx.fillText('Super Curl Games presents', 350, 120);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+      // 2. Wall appears (with brick texture, shadow, highlight)
+      if (introState >= 1 && introState < 3) {
+        ctx.save();
+        ctx.globalAlpha = wallAlpha;
+        // Wall shadow
+        ctx.shadowColor = '#222a';
+        ctx.shadowBlur = 24;
+        ctx.fillStyle = '#b0b0b0';
+        ctx.fillRect(250, 180, 200, 60);
+        ctx.shadowBlur = 0;
+        // Brick pattern
+        for(let y=0;y<2;y++) for(let x=0;x<4;x++) {
+          ctx.fillStyle = x%2===y%2 ? '#cfcfcf' : '#bdbdbd';
+          ctx.fillRect(250+x*50,180+y*30,50,30);
+        }
+        // Brick lines
+        ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+        for(let i=0;i<5;i++) ctx.beginPath(),ctx.moveTo(250+i*50,180),ctx.lineTo(250+i*50,240),ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(250,210); ctx.lineTo(450,210); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(275,240); ctx.lineTo(425,240); ctx.stroke();
+        // Wall highlight
+        let wallGrad = ctx.createLinearGradient(250,180,450,240);
+        wallGrad.addColorStop(0,'#fff3'); wallGrad.addColorStop(1,'#fff0');
+        ctx.fillStyle = wallGrad;
+        ctx.fillRect(250,180,200,20);
+        ctx.restore();
+      }
+      // Wall bricks flying (explosion)
+      if (introState === 3) {
+        ctx.save();
+        wallBricks.forEach((b,i) => {
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.rotate(b.vx*0.08);
+          ctx.fillStyle = i%2===0 ? '#cfcfcf' : '#bdbdbd';
+          ctx.fillRect(-25,-15,50,30);
+          ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+          ctx.strokeRect(-25,-15,50,30);
+          ctx.restore();
+        });
+        ctx.restore();
+      }
+      // 3. Arrow flies (with metallic shaft, feather, shadow)
+      if (introState >= 2) {
+        ctx.save();
+        // Arrow shadow
+        ctx.shadowColor = '#000a'; ctx.shadowBlur = 10;
+        // Shaft
+        let shaftGrad = ctx.createLinearGradient(arrowX,arrowY,arrowX+40,arrowY);
+        shaftGrad.addColorStop(0,'#eee'); shaftGrad.addColorStop(1,'#888');
+        ctx.strokeStyle = shaftGrad;
+        ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(arrowX,arrowY); ctx.lineTo(arrowX+40,arrowY); ctx.stroke();
+        // Arrowhead
+        ctx.shadowBlur = 0;
+        let headGrad = ctx.createLinearGradient(arrowX+30,arrowY-7,arrowX+40,arrowY);
+        headGrad.addColorStop(0,'#efc050'); headGrad.addColorStop(1,'#fff');
+        ctx.fillStyle = headGrad;
+        ctx.beginPath(); ctx.moveTo(arrowX+40,arrowY); ctx.lineTo(arrowX+30,arrowY-7); ctx.lineTo(arrowX+30,arrowY+7); ctx.closePath(); ctx.fill();
+        // Feathers
+        ctx.fillStyle = '#b39ddb';
+        ctx.beginPath(); ctx.moveTo(arrowX,arrowY); ctx.lineTo(arrowX-8,arrowY-5); ctx.lineTo(arrowX-6,arrowY); ctx.lineTo(arrowX-8,arrowY+5); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+      // 4. Explosion (with glow, debris)
+      if (introState >= 3) {
+        ctx.save();
+          ctx.globalAlpha = 0.8;
+          let grad = ctx.createRadialGradient(arrowX+40,arrowY,0,arrowX+40,arrowY,explosionR);
+          grad.addColorStop(0,'#fff'); grad.addColorStop(0.2,'#ffe082'); grad.addColorStop(0.5,'#efc050'); grad.addColorStop(0.8,'#ff9800'); grad.addColorStop(1,'#18181800');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(arrowX+40,arrowY,explosionR,0,2*Math.PI); ctx.fill();
+          // Debris (spread farther)
+          for(let i=0;i<12;i++) {
+            let a = Math.PI*2*i/12, r = explosionR*1.1;
+            ctx.save();
+            ctx.translate(arrowX+40+Math.cos(a)*r,arrowY+Math.sin(a)*r);
+            ctx.rotate(a);
+            ctx.fillStyle = '#bdbdbd';
+            ctx.fillRect(-3,-3,6,14);
+            ctx.restore();
+          }
+          ctx.restore();
+      }
+      // 5. Smoke rises (with soft edges, random offset)
+      if (introState >= 4) {
+        for(let i=0;i<6;i++) {
+          ctx.save();
+          ctx.globalAlpha = smokeAlpha * (0.7-Math.abs(i-2.5)*0.13);
+          let sx = 350-40+30*i + Math.sin(i+introTime/10)*6;
+          let sy = 200-30-10*i - Math.cos(i+introTime/15)*4;
+          let smokeGrad = ctx.createRadialGradient(sx,sy,6,sx,sy,18-2*i);
+          smokeGrad.addColorStop(0,'#fff8'); smokeGrad.addColorStop(1,'#ccc0');
+          ctx.fillStyle = smokeGrad;
+          ctx.beginPath(); ctx.ellipse(sx, sy, 30-3*i, 18-2*i, 0, 0, 2*Math.PI); ctx.fill();
+          ctx.restore();
+        }
+      }
+      // 6. Reveal title (with glow, shadow)
+      if (introState >= 5) {
+        ctx.save();
+        ctx.font = 'bold 3.5em Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = heavyAlpha;
+        ctx.shadowColor = '#efc050';
+        ctx.shadowBlur = 32;
+        ctx.fillStyle = '#fff';
+        ctx.fillText('Heavy Defence', 350, 170);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
+    function stepIntro() {
+      introTime++;
+      if (introState === 0 && introTime > 40) { introState=1; introTime=0; }
+      if (introState === 1) { wallAlpha = Math.min(1, wallAlpha+0.04); if (wallAlpha>=1 && introTime>20) { introState=2; introTime=0; } }
+      if (introState === 2) { arrowX += 16; if (arrowX > 370) { introState=3; introTime=0; initWallBricks(); } }
+      if (introState === 3) {
+        explosionR += 16;
+        // Animate wall bricks flying outward
+        wallBricks.forEach((b,i) => {
+          if (!b.exploded) {
+            let angle = Math.PI*2*i/8 + Math.random()*0.2-0.1;
+            let speed = 8 + Math.random()*6;
+            b.vx = Math.cos(angle)*speed;
+            b.vy = Math.sin(angle)*speed-2;
+            b.exploded = true;
+          }
+          b.x += b.vx;
+          b.y += b.vy;
+          b.vy += 0.7; // gravity
+        });
+        if (explosionR>120) { introState=4; introTime=0; smokeAlpha = 0; }
+      }
+      // Wait for smoke to fully rise before showing title
+      if (introState === 4) {
+        smokeAlpha = Math.min(1, smokeAlpha+0.04);
+        if (smokeAlpha>=1 && introTime>40) { introState=5; introTime=0; heavyAlpha = 0; }
+      }
+      if (introState === 5) {
+        heavyAlpha = Math.min(1, heavyAlpha+0.05);
+        if (heavyAlpha>=1 && introTime>30) {
+          // Fade out intro, fade in game
+          introOverlay.style.transition = 'opacity 0.7s';
+          rootDiv.style.transition = 'opacity 0.7s';
+          introOverlay.style.opacity = 0;
+          rootDiv.style.opacity = 1;
+          setTimeout(() => { introOverlay.style.display = 'none'; }, 800);
+        }
+      }
+      drawIntro();
+      if (introState < 6) requestAnimationFrame(stepIntro);
+    }
+    drawIntro();
+    stepIntro();
+    // Game state
+    let game, loop, logDiv = document.getElementById('log');
+    function resetGame() {
+      if (loop) clearInterval(loop);
+      game = {
+        health: 100,
+  money: 120,
+        wave: 1,
+        towers: [],
+        enemies: [],
+        hand: []
+      };
+      logDiv.textContent = '';
+      document.getElementById('gameOver').style.display = 'none';
+      updateUI();
+    }
+    resetGame();
+
+    // Card shop
+    // Add new towers
+    const shop = {
+      cards: [
+        { name: 'Archer', cost: 15, type: 'tower', damage: 10, range: 3, attackSpeed: 0.5, desc: 'Shoots arrows at range.' },
+        { name: 'Swordsman', cost: 10, type: 'tower', damage: 15, range: 1, attackSpeed: 0.5, desc: 'Runs to slash enemies.' },
+        { name: 'Spearman', cost: 18, type: 'tower', damage: 18, range: 2, attackSpeed: 0.6, desc: 'Stabs enemies at medium range.' },
+        { name: 'Knight', cost: 28, type: 'tower', damage: 25, range: 1, attackSpeed: 0.7, desc: 'Armored melee defender.' },
+        { name: 'Arrow Launcher', cost: 25, type: 'tower', damage: 15, range: 4, attackSpeed: 0.7, desc: 'Launches volleys of arrows.' },
+        { name: 'Crossbow', cost: 30, type: 'tower', damage: 20, range: 5, attackSpeed: 0.7, desc: 'Fires powerful bolts.' },
+        { name: 'Mage', cost: 40, type: 'tower', damage: 30, range: 4, attackSpeed: 0.8, desc: 'Casts fireballs at enemies.' },
+        { name: 'Frost Mage', cost: 42, type: 'tower', damage: 18, range: 4, attackSpeed: 0.7, desc: 'Slows enemies with frost magic.' },
+        { name: 'Cannon', cost: 45, type: 'tower', damage: 25, range: 3, attackSpeed: 1, desc: 'Deals splash damage.' },
+        { name: 'Bombard', cost: 60, type: 'tower', damage: 35, range: 3, attackSpeed: 1.5, desc: 'Heavy explosive splash.' },
+        { name: 'Ballista', cost: 55, type: 'tower', damage: 30, range: 6, attackSpeed: 1.1, desc: 'Long-range armor-piercing.' },
+        { name: 'Double Cannon', cost: 120, type: 'tower', damage: 40, range: 3, attackSpeed: 1.2, desc: 'Fires two powerful blasts at once!' },
+        { name: 'Heavy Swordsman', cost: 80, type: 'tower', damage: 40, range: 1, attackSpeed: 1.2, desc: 'Gold-armored melee powerhouse.' },
+        { name: 'Heavy Archer', cost: 70, type: 'tower', damage: 28, range: 4, attackSpeed: 1, desc: 'Blue-armored ranged specialist.' },
+      ],
+      buy(cardName) {
+        const card = this.cards.find(c => c.name === cardName);
+        if (!card) return logMsg('Card not found!');
+        if (game.money < card.cost) return logMsg('Not enough money to buy ' + card.name);
+        game.money -= card.cost;
+        game.hand.push(card);
+        logMsg(card.name + ' card added to hand!');
+        updateUI();
+      }
+    };
+    function buy(name) { shop.buy(name); }
+
+    // Place a tower from hand
+    function placeTower(type) {
+      const idx = game.hand.findIndex(c => c.name === type);
+      if (idx === -1) return logMsg('No ' + type + ' card in hand!');
+      const pos = parseInt(document.getElementById('posInput').value);
+  const card = game.hand.splice(idx, 1)[0];
+  game.towers.push({ pos, damage: card.damage, range: card.range, name: card.name, attackSpeed: card.attackSpeed, cooldown: 0 });
+  logMsg(card.name + ' placed at ' + pos);
+  updateUI();
+    }
+
+    // Enemy types
+    // Update enemy types with damage
+    const enemyTypes = [
+  { name: 'Goblin', color: '#ff6f61', hp: 30, speed: 1, dmg: 10 },
+  { name: 'Orc', color: '#4caf50', hp: 70, speed: 0.7, dmg: 20 },
+  { name: 'Bat', color: '#b39ddb', hp: 20, speed: 2, dmg: 7 },
+  { name: 'Heavy Swordsman', color: '#b8860b', hp: 100, speed: 0.5, dmg: 35 },
+  { name: 'Heavy Archer', color: '#1976d2', hp: 60, speed: 0.8, dmg: 18 },
+    ];
+
+    // Spawn a wave of enemies (random types)
+    function spawnWave() {
+      for (let i = 0; i < game.wave + 2; i++) {
+        let et = enemyTypes[Math.floor(Math.random()*enemyTypes.length)];
+        game.enemies.push({
+          type: et.name,
+          color: et.color,
+          hp: et.hp + Math.floor(game.wave*2),
+          speed: et.speed,
+          pos: 0
+        });
+      }
+      logMsg('Wave ' + game.wave + ' spawned!');
+      updateUI();
+    }
+
+    // Towers attack
+    // Update towersAttack for new towers
+    function towersAttack() {
+      game.towers.forEach(tower => {
+        if (tower.cooldown > 0) {
+          tower.cooldown -= 0.2; // Lower = faster attacks (was 1, now 0.2 for much faster)
+          if (tower.cooldown < 0) tower.cooldown = 0;
+          return;
+        }
+        if (tower.name === 'Archer') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Archer at ${tower.pos} shoots an arrow at enemy for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Heavy Swordsman') {
+          let target = game.enemies.filter(e => e.hp > 0)
+            .sort((a, b) => Math.abs(a.pos - tower.pos) - Math.abs(b.pos - tower.pos))[0];
+          if (target && Math.abs(target.pos - tower.pos) <= 1) {
+            target.hp -= tower.damage;
+            logMsg(`Heavy Swordsman at ${tower.pos} smashes enemy for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          } else if (target) {
+            if (target.pos > tower.pos) tower.pos++;
+            else if (target.pos < tower.pos) tower.pos--;
+            logMsg(`Heavy Swordsman charges to ${tower.pos} with golden sword!`);
+            tower.cooldown = 0.2;
+          }
+        } else if (tower.name === 'Heavy Archer') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Heavy Archer at ${tower.pos} fires a powerful arrow for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Swordsman') {
+          let target = game.enemies.filter(e => e.hp > 0)
+            .sort((a, b) => Math.abs(a.pos - tower.pos) - Math.abs(b.pos - tower.pos))[0];
+          if (target && Math.abs(target.pos - tower.pos) <= 1) {
+            target.hp -= tower.damage;
+            logMsg(`Swordsman at ${tower.pos} slashes enemy for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          } else if (target) {
+            if (target.pos > tower.pos) tower.pos++;
+            else if (target.pos < tower.pos) tower.pos--;
+            logMsg(`Swordsman runs to ${tower.pos} with sword drawn!`);
+            tower.cooldown = 0.2;
+          }
+        } else if (tower.name === 'Spearman') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Spearman at ${tower.pos} stabs enemy for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Knight') {
+          let target = game.enemies.filter(e => e.hp > 0)
+            .sort((a, b) => Math.abs(a.pos - tower.pos) - Math.abs(b.pos - tower.pos))[0];
+          if (target && Math.abs(target.pos - tower.pos) <= 1) {
+            target.hp -= tower.damage;
+            logMsg(`Knight at ${tower.pos} strikes enemy for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          } else if (target) {
+            if (target.pos > tower.pos) tower.pos++;
+            else if (target.pos < tower.pos) tower.pos--;
+            logMsg(`Knight moves to ${tower.pos} with shield raised!`);
+            tower.cooldown = 0.2;
+          }
+        } else if (tower.name === 'Arrow Launcher') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Arrow Launcher at ${tower.pos} launches a volley for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Crossbow') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Crossbow at ${tower.pos} fires a bolt for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Mage') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Mage at ${tower.pos} casts a fireball for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Frost Mage') {
+          let target = game.enemies.find(e => Math.abs(e.pos - tower.pos) <= tower.range && e.hp > 0);
+          if (target) {
+            target.hp -= tower.damage;
+            // Slow effect
+            target.speed *= 0.7;
+            logMsg(`Frost Mage at ${tower.pos} casts frost magic for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Cannon') {
+          let targets = game.enemies.filter(e => e.hp > 0 && Math.abs(e.pos - tower.pos) <= tower.range);
+          if (targets.length > 0) {
+            let totalDamage = tower.damage * targets.length;
+            targets.forEach(t => t.hp -= tower.damage);
+            logMsg(`Cannon at ${tower.pos} deals ${totalDamage} splash damage`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Bombard') {
+          let targets = game.enemies.filter(e => e.hp > 0 && Math.abs(e.pos - tower.pos) <= tower.range);
+          if (targets.length > 0) {
+            let totalDamage = tower.damage * targets.length;
+            targets.forEach(t => t.hp -= tower.damage);
+            logMsg(`Bombard at ${tower.pos} deals ${totalDamage} heavy splash damage!`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Ballista') {
+          let target = game.enemies.filter(e => e.hp > 0 && Math.abs(e.pos - tower.pos) <= tower.range)
+            .sort((a, b) => b.hp - a.hp)[0]; // Prioritize highest HP
+          if (target) {
+            target.hp -= tower.damage;
+            logMsg(`Ballista at ${tower.pos} fires an armor-piercing shot for ${tower.damage}`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        } else if (tower.name === 'Double Cannon') {
+          let targets = game.enemies.filter(e => e.hp > 0 && Math.abs(e.pos - tower.pos) <= tower.range);
+          if (targets.length > 0) {
+            let totalDamage = tower.damage * 2 * targets.length;
+            targets.forEach(t => t.hp -= tower.damage * 2);
+            logMsg(`Double Cannon at ${tower.pos} fires two blasts for ${totalDamage} total splash damage!`);
+            tower.cooldown = tower.attackSpeed;
+          }
+        }
+      });
+    }
+
+    // Enemies move and damage base (different damage)
+    function enemiesMove() {
+      game.enemies.forEach(enemy => {
+        if (enemy.hp > 0) {
+          enemy.pos += enemy.speed;
+          if (enemy.pos > 10) {
+            game.health -= enemyTypes.find(t=>t.name===enemy.type).dmg;
+            enemy.hp = 0;
+            logMsg(`${enemy.type} reached base! Health: ${game.health}`);
+          }
+        }
+      });
+    }
+
+    // Game loop
+    function gameTick() {
+      towersAttack();
+      enemiesMove();
+      game.enemies = game.enemies.filter(e => e.hp > 0);
+      if (game.enemies.length === 0) {
+        game.wave++;
+        game.money += 20;
+        spawnWave();
+      }
+      if (game.health <= 0) {
+        logMsg('Game Over!');
+        clearInterval(loop);
+        document.getElementById('gameOver').style.display = 'flex';
+      }
+      updateUI();
+    }
+
+    function startGame() {
+      if (loop) clearInterval(loop);
+      spawnWave();
+      loop = setInterval(gameTick, 1000);
+    }
+
+    function logMsg(msg) {
+      logDiv.textContent += msg + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateUI() {
+      document.getElementById('money').textContent = 'Money: $' + game.money;
+      document.getElementById('stats').textContent = `Health: ${game.health} | Wave: ${game.wave}`;
+      document.getElementById('towers').innerHTML = '<strong>Towers:</strong> ' + (game.towers.length ? game.towers.map(t => `<span class="tower">${t.name}@${t.pos}</span>`).join(' ') : 'None');
+      document.getElementById('enemies').innerHTML = '<strong>Enemies:</strong> ' + (game.enemies.length ? game.enemies.map(e => `<span class="enemy">E${e.hp}@${e.pos}</span>`).join(' ') : 'None');
+      drawGame();
+    }
+    // Draw graphical game state
+    // Draw health bar and more details
+    function drawGame() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      // Draw realistic ground (dirt/grass texture with vignette)
+      let grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grd.addColorStop(0, '#7ec850'); // lush green
+      grd.addColorStop(0.3, '#bdb76b'); // khaki
+      grd.addColorStop(0.7, '#8b5a2b'); // brown
+      grd.addColorStop(1, '#3e2723'); // dark brown
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Vignette
+      let vignette = ctx.createRadialGradient(canvas.width/2,canvas.height/2,60,canvas.width/2,canvas.height/2,canvas.width/1.2);
+      vignette.addColorStop(0,'#0000'); vignette.addColorStop(1,'#000a');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      // Add some noise for texture
+      for (let i = 0; i < 1200; i++) {
+        let x = Math.random() * canvas.width;
+        let y = Math.random() * canvas.height;
+        let alpha = Math.random() * 0.08 + 0.02;
+        ctx.fillStyle = `rgba(80,60,30,${alpha})`;
+        ctx.fillRect(x, y, 1.2, 1.2);
+      }
+      // Draw path with realistic shadow and highlight
+      ctx.save();
+      ctx.shadowColor = '#222a';
+      ctx.shadowBlur = 18;
+      let pathGrad = ctx.createLinearGradient(30,60,470,60);
+      pathGrad.addColorStop(0,'#e0c97a');
+      pathGrad.addColorStop(0.5,'#fffbe6');
+      pathGrad.addColorStop(1,'#bdb76b');
+      ctx.strokeStyle = pathGrad;
+      ctx.lineWidth = 22;
+      ctx.beginPath();
+      ctx.moveTo(30,60); ctx.lineTo(470,60); ctx.stroke();
+      ctx.restore();
+      // Path edge highlight
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(30,51); ctx.lineTo(470,51); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(30,69); ctx.lineTo(470,69); ctx.stroke();
+      ctx.restore();
+      // Draw towers with more detail
+      game.towers.forEach(t => {
+        let x = 30 + t.pos * 44;
+        ctx.save();
+        ctx.shadowColor = '#000c';
+        ctx.shadowBlur = 14;
+        if (t.name === 'Heavy Swordsman') {
+          // Heavy Swordsman: large gold armor, big sword
+          let grad = ctx.createRadialGradient(x,80,8,x,80,18);
+          grad.addColorStop(0,'#fff8e1'); grad.addColorStop(0.5,'#b8860b'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,80,18,0,2*Math.PI); ctx.fill();
+          // Head
+          let headGrad = ctx.createRadialGradient(x,68,2,x,68,7);
+          headGrad.addColorStop(0,'#fff'); headGrad.addColorStop(1,'#bbb');
+          ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(x,68,7,0,2*Math.PI); ctx.fill();
+          // Sword
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 10;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.moveTo(x+12,80); ctx.lineTo(x+32,100); ctx.stroke();
+          ctx.restore();
+        } else if (t.name === 'Heavy Archer') {
+          // Heavy Archer: large blue armor, big bow
+          let grad = ctx.createRadialGradient(x,80,8,x,80,16);
+          grad.addColorStop(0,'#e3f2fd'); grad.addColorStop(0.5,'#1976d2'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,80,16,0,2*Math.PI); ctx.fill();
+          // Head
+          let headGrad = ctx.createRadialGradient(x,68,2,x,68,7);
+          headGrad.addColorStop(0,'#fff'); headGrad.addColorStop(1,'#bbb');
+          ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(x,68,7,0,2*Math.PI); ctx.fill();
+          // Bow
+          ctx.save(); ctx.shadowColor = '#1976d2'; ctx.shadowBlur = 10;
+          ctx.strokeStyle = '#1976d2'; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.arc(x+10,80,10,Math.PI/2,Math.PI*1.5); ctx.stroke();
+          ctx.restore();
+        } else if (t.name === 'Knight') {
+          // Knight: blue armor, shield, sword
+          let grad = ctx.createRadialGradient(x,80,6,x,80,16);
+          grad.addColorStop(0,'#e3f2fd'); grad.addColorStop(0.5,'#1976d2'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,80,14,0,2*Math.PI); ctx.fill();
+          // Head
+          let headGrad = ctx.createRadialGradient(x,68,2,x,68,6);
+          headGrad.addColorStop(0,'#fff'); headGrad.addColorStop(1,'#bbb');
+          ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(x,68,6,0,2*Math.PI); ctx.fill();
+          // Shield
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 6;
+          ctx.strokeStyle = '#efc050'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(x-10,80,6,Math.PI/2,Math.PI*1.5); ctx.stroke(); ctx.restore();
+          // Sword
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x+6,80); ctx.lineTo(x+18,92); ctx.stroke(); ctx.restore();
+        } else if (t.name === 'Spearman') {
+          // Spearman: green armor, spear
+          let grad = ctx.createRadialGradient(x,80,6,x,80,14);
+          grad.addColorStop(0,'#e0ffe0'); grad.addColorStop(0.5,'#4caf50'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,80,12,0,2*Math.PI); ctx.fill();
+          // Head
+          let headGrad = ctx.createRadialGradient(x,68,2,x,68,6);
+          headGrad.addColorStop(0,'#fff'); headGrad.addColorStop(1,'#bbb');
+          ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(x,68,6,0,2*Math.PI); ctx.fill();
+          // Spear
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 6;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x+2,80); ctx.lineTo(x+18,60); ctx.stroke(); ctx.restore();
+        } else if (t.name === 'Frost Mage') {
+          // Frost Mage: blue/white, staff
+          let grad = ctx.createRadialGradient(x,40,6,x,40,14);
+          grad.addColorStop(0,'#fff'); grad.addColorStop(0.5,'#90caf9'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,40,12,0,2*Math.PI); ctx.fill();
+          // Head
+          let headGrad = ctx.createRadialGradient(x,28,2,x,28,6);
+          headGrad.addColorStop(0,'#fff'); headGrad.addColorStop(1,'#bbb');
+          ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(x,28,6,0,2*Math.PI); ctx.fill();
+          // Staff
+          ctx.save(); ctx.shadowColor = '#90caf9'; ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#90caf9'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x+5,40); ctx.lineTo(x+15,50); ctx.stroke(); ctx.restore();
+          // Frost orb
+          ctx.save(); ctx.shadowColor = '#90caf9'; ctx.shadowBlur = 12;
+          ctx.fillStyle = '#90caf9'; ctx.beginPath(); ctx.arc(x+15,50,4,0,2*Math.PI); ctx.fill(); ctx.restore();
+        } else if (t.name === 'Bombard') {
+          // Bombard: large dark cannon
+          let grad = ctx.createLinearGradient(x-16,60,x+16,68);
+          grad.addColorStop(0,'#bbb'); grad.addColorStop(1,'#333');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.ellipse(x,60,16,10,0,0,2*Math.PI); ctx.fill();
+          // Barrel
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
+          ctx.fillStyle = '#333'; ctx.beginPath(); ctx.rect(x-6,40,12,28); ctx.fill(); ctx.restore();
+          // Muzzle
+          ctx.save(); ctx.shadowColor = '#efc050'; ctx.shadowBlur = 8;
+          ctx.fillStyle = '#efc050'; ctx.beginPath(); ctx.arc(x,40,5,0,2*Math.PI); ctx.fill(); ctx.restore();
+        } else if (t.name === 'Ballista') {
+          // Ballista: wood, long arms
+          ctx.fillStyle = '#a0522d';
+          ctx.beginPath(); ctx.rect(x-8,50,16,8); ctx.fill();
+          ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x-8,54); ctx.lineTo(x-20,40); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x+8,54); ctx.lineTo(x+20,40); ctx.stroke(); ctx.restore();
+          // Bolt
+          ctx.save(); ctx.strokeStyle = '#efc050'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x,50); ctx.lineTo(x,40); ctx.stroke(); ctx.restore();
+        }
+        ctx.restore();
+      });
+      // Draw enemies with more detail
+      game.enemies.forEach(e => {
+        let x = 30 + e.pos * 44;
+        ctx.save();
+        ctx.shadowColor = '#000c';
+        ctx.shadowBlur = 14;
+        if (e.type === 'Goblin') {
+          // Goblin: bright green, big eyes
+          let grad = ctx.createRadialGradient(x,60,6,x,60,12);
+          grad.addColorStop(0,'#eaffb2'); grad.addColorStop(0.5,'#b2ff59'); grad.addColorStop(1,'#33691e');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,60,12,0,2*Math.PI); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial'; ctx.fillText(e.hp,x-10,55);
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.ellipse(x-8,52,3,7,Math.PI/6,0,2*Math.PI); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(x+8,52,3,7,-Math.PI/6,0,2*Math.PI); ctx.fill();
+          // Eyes
+          ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x-4,62,2,0,2*Math.PI); ctx.arc(x+4,62,2,0,2*Math.PI); ctx.fill();
+          ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(x-4,62,1,0,2*Math.PI); ctx.arc(x+4,62,1,0,2*Math.PI); ctx.fill();
+        } else if (e.type === 'Orc') {
+          // Orc: big, green, tusks
+          let grad = ctx.createRadialGradient(x,60,8,x,60,15);
+          grad.addColorStop(0,'#f4ff81'); grad.addColorStop(0.5,'#aeea00'); grad.addColorStop(1,'#263300');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,60,15,0,2*Math.PI); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Arial'; ctx.fillText(e.hp,x-12,55);
+          // Tusks
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.ellipse(x-6,72,2,5,0,0,2*Math.PI); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(x+6,72,2,5,0,0,2*Math.PI); ctx.fill();
+        } else if (e.type === 'Bat') {
+          // Bat: purple, wings
+          let grad = ctx.createRadialGradient(x,60,4,x,60,10);
+          grad.addColorStop(0,'#fff'); grad.addColorStop(0.5,'#b39ddb'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,60,10,0,2*Math.PI); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial'; ctx.fillText(e.hp,x-8,55);
+          ctx.strokeStyle = grad; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x-10,60); ctx.quadraticCurveTo(x-18,50,x-2,60); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x+10,60); ctx.quadraticCurveTo(x+18,50,x+2,60); ctx.stroke();
+        } else if (e.type === 'Heavy Swordsman') {
+          // Heavy Swordsman: gold armor, big sword
+          let grad = ctx.createRadialGradient(x,60,8,x,60,16);
+          grad.addColorStop(0,'#fff8e1'); grad.addColorStop(0.5,'#b8860b'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,60,16,0,2*Math.PI); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.fillText(e.hp,x-14,55);
+          // Sword
+          ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.moveTo(x+10,60); ctx.lineTo(x+28,80); ctx.stroke();
+          ctx.restore();
+        } else if (e.type === 'Heavy Archer') {
+          // Heavy Archer: blue armor, bow
+          let grad = ctx.createRadialGradient(x,60,8,x,60,14);
+          grad.addColorStop(0,'#e3f2fd'); grad.addColorStop(0.5,'#1976d2'); grad.addColorStop(1,'#222');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(x,60,14,0,2*Math.PI); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#1976d2'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Arial'; ctx.fillText(e.hp,x-12,55);
+          // Bow
+          ctx.save(); ctx.shadowColor = '#1976d2'; ctx.shadowBlur = 8;
+          ctx.strokeStyle = '#1976d2'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.arc(x+8,60,8,Math.PI/2,Math.PI*1.5); ctx.stroke();
+          ctx.restore();
+        }
+        // Health bar
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#222';
+        ctx.fillRect(x-10,70,20,4);
+        ctx.fillStyle = '#efc050';
+        ctx.fillRect(x-10,70,20*(e.hp/(enemyTypes.find(t=>t.name===e.type).hp+game.wave*2)),4);
+        ctx.restore();
+      });
+      // Draw base health bar
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(470,90,20,8);
+      ctx.fillStyle = '#efc050';
+      ctx.fillRect(470,90,20*(game.health/100),8);
+      ctx.strokeStyle = '#444'; ctx.strokeRect(470,90,20,8);
+    }
+    // Render card shop
+    function renderCardShop() {
+      const shopDiv = document.getElementById('cardShop');
+      shopDiv.innerHTML = '';
+      shop.cards.forEach(card => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card-shop-card';
+        cardDiv.onclick = () => shop.buy(card.name);
+  // Card art (SVG)
+  let art = '';
+  if (card.name === 'Archer') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#6b5b95'/><rect x='24' y='12' width='7' height='3' fill='#efc050'/></svg>`;
+  else if (card.name === 'Swordsman') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#45b8ac'/><rect x='24' y='24' width='8' height='3' fill='#fff'/></svg>`;
+  else if (card.name === 'Spearman') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#2196f3'/><line x1='18' y1='8' x2='18' y2='28' stroke='#fff' stroke-width='2'/></svg>`;
+  else if (card.name === 'Knight') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#1976d2'/><rect x='24' y='12' width='7' height='3' fill='#efc050'/></svg>`;
+  else if (card.name === 'Arrow Launcher') art = `<svg width='36' height='36'><rect x='8' y='8' width='20' height='20' fill='#efc050'/><rect x='16' y='16' width='4' height='12' fill='#6b5b95'/></svg>`;
+  else if (card.name === 'Crossbow') art = `<svg width='36' height='36'><rect x='6' y='10' width='24' height='16' fill='#b39ddb'/><rect x='16' y='6' width='4' height='24' fill='#efc050'/></svg>`;
+  else if (card.name === 'Mage') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#f44336'/><circle cx='18' cy='18' r='7' fill='#fff'/></svg>`;
+  else if (card.name === 'Frost Mage') art = `<svg width='36' height='36'><circle cx='18' cy='18' r='13' fill='#2196f3'/><circle cx='18' cy='18' r='7' fill='#fff'/></svg>`;
+  else if (card.name === 'Cannon') art = `<svg width='36' height='36'><ellipse cx='18' cy='24' rx='12' ry='8' fill='#888'/><rect x='16' y='8' width='4' height='16' fill='#333'/></svg>`;
+  else if (card.name === 'Bombard') art = `<svg width='36' height='36'><ellipse cx='18' cy='24' rx='12' ry='8' fill='#888'/><rect x='10' y='8' width='4' height='16' fill='#333'/><rect x='22' y='8' width='4' height='16' fill='#333'/></svg>`;
+  else if (card.name === 'Ballista') art = `<svg width='36' height='36'><rect x='8' y='8' width='20' height='20' fill='#6b5b95'/><line x1='18' y1='8' x2='18' y2='28' stroke='#efc050' stroke-width='2'/></svg>`;
+  else if (card.name === 'Double Cannon') art = `<svg width='36' height='36'><ellipse cx='18' cy='24' rx='12' ry='8' fill='#888'/><rect x='10' y='8' width='4' height='16' fill='#333'/><rect x='22' y='8' width='4' height='16' fill='#333'/></svg>`;
+        cardDiv.innerHTML = `
+          <div class='card-art'>${art}</div>
+          <div class='card-name'>${card.name}</div>
+          <div class='card-cost'>$${card.cost}</div>
+          <div class='card-desc'>${card.desc}</div>
+        `;
+        shopDiv.appendChild(cardDiv);
+      });
+    }
+    renderCardShop();
+    // Remove old shop buttons (if present)
+    // const oldShop = document.querySelector('.shop');
+    // if (oldShop) oldShop.style.display = 'none';
+    window.startGame = startGame;
+    window.resetGame = resetGame;
+    window.placeTower = placeTower;
+    // Upgrade logic
+    window.upgradeTower = function() {
+      const pos = parseInt(document.getElementById('upgradePos').value);
+      const tower = game.towers.find(t => t.pos === pos);
+      if (!tower) return logMsg('No tower at that position!');
+      if (game.money < 30) return logMsg('Not enough money to upgrade!');
+      tower.damage += 5;
+      tower.range += 1;
+      game.money -= 30;
+      logMsg(`${tower.name} at ${pos} upgraded! (+5 dmg, +1 range)`);
+      updateUI();
+    };
+  };
+  </script>
+</body>
+</html>

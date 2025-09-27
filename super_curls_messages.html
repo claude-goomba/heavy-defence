@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Curls Inc Animated Messages</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8ffae 0%, #43c6ac 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .message {
+            font-family: 'Arial Black', Arial, sans-serif;
+            font-size: 2em;
+            margin: 10px 0;
+            padding: 8px 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // Messages from the Python file
+        const messages = [
+            "this is super curls inc",
+            "take your seat",
+            "enjoy your meal",
+            "have a nice day",
+            "see you again",
+            "goodbye",
+            "we hope to see you again",
+            "thank you for your support",
+            "we will make stuff soon",
+            "power to the people",
+            "Copyright 2025 Super Curl Inc",
+            "All rights reserved",
+            "Version 1.0.0"
+        ];
+        // Color palette
+        const colors = [
+            '#ff6f61', '#6b5b95', '#88b04b', '#f7cac9', '#92a8d1', '#955251', '#b565a7', '#009b77', '#dd4124', '#d65076', '#45b8ac', '#efc050', '#5b5ea6'
+        ];
+        const root = document.getElementById('root');
+        let idx = 0;
+        function showNextMessage() {
+            if (idx < messages.length) {
+                const div = document.createElement('div');
+                div.className = 'message';
+                div.textContent = messages[idx];
+                div.style.background = colors[idx % colors.length];
+                div.style.color = '#fff';
+                root.appendChild(div);
+                idx++;
+                setTimeout(showNextMessage, 700);
+            }
+        }
+        showNextMessage();
+    </script>
+</body>
+</html>

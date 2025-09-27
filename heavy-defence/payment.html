@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .payment-option { margin: 20px; padding: 20px; border: 1px solid #ccc; display: inline-block; }
+        button { padding: 10px 20px; font-size: 16px; }
+    </style>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Buy Super Curl Games</h1>
+    <div class="payment-option">
+        <h2>Full Game</h2>
+        <p>$10</p>
+        <button onclick="pay('game')">Buy Full Game</button>
+    </div>
+    <div class="payment-option">
+        <h2>DLC</h2>
+        <p>$5</p>
+        <button onclick="pay('dlc')">Buy DLC</button>
+    </div>
+    <script>
+        async function pay(type) {
+            try {
+                const res = await fetch('http://localhost:5000/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type })
+                });
+                const data = await res.json();
+                if (data.id) {
+                    var stripe = Stripe('pk_test_51N...'); // Replace with your Stripe publishable key
+                    stripe.redirectToCheckout({ sessionId: data.id });
+                } else if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert('Error: ' + (data.error || 'Could not create payment session.'));
+                }
+            } catch (err) {
+                alert('Payment error: ' + err);
+            }
+        }
+    </script>
+</body>
+</html>
