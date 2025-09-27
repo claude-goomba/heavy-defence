@@ -79,11 +79,7 @@
   </style>
 </head>
 <body>
-  <div style="text-align:center; margin-top:40px;">
-    <h2>Unlock Full Game</h2>
-    <p>The full game costs $10. Please purchase to continue.</p>
-    <a href="payment.html"><button>Buy Full Game for $10</button></a>
-  </div>
+  <!-- Removed payment section. Game is now fully accessible. -->
   <div id="introOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#181818;z-index:3000;display:flex;align-items:center;justify-content:center;transition:opacity 0.7s;">
     <canvas id="introCanvas" width="700" height="350" style="display:block;margin:auto;background:#181818;border-radius:18px;"></canvas>
   </div>
@@ -354,20 +350,20 @@
     // Add new towers
     const shop = {
       cards: [
-        { name: 'Archer', cost: 15, type: 'tower', damage: 10, range: 3, attackSpeed: 0.5, desc: 'Shoots arrows at range.' },
-        { name: 'Swordsman', cost: 10, type: 'tower', damage: 15, range: 1, attackSpeed: 0.5, desc: 'Runs to slash enemies.' },
-        { name: 'Spearman', cost: 18, type: 'tower', damage: 18, range: 2, attackSpeed: 0.6, desc: 'Stabs enemies at medium range.' },
-        { name: 'Knight', cost: 28, type: 'tower', damage: 25, range: 1, attackSpeed: 0.7, desc: 'Armored melee defender.' },
-        { name: 'Arrow Launcher', cost: 25, type: 'tower', damage: 15, range: 4, attackSpeed: 0.7, desc: 'Launches volleys of arrows.' },
-        { name: 'Crossbow', cost: 30, type: 'tower', damage: 20, range: 5, attackSpeed: 0.7, desc: 'Fires powerful bolts.' },
-        { name: 'Mage', cost: 40, type: 'tower', damage: 30, range: 4, attackSpeed: 0.8, desc: 'Casts fireballs at enemies.' },
-        { name: 'Frost Mage', cost: 42, type: 'tower', damage: 18, range: 4, attackSpeed: 0.7, desc: 'Slows enemies with frost magic.' },
-        { name: 'Cannon', cost: 45, type: 'tower', damage: 25, range: 3, attackSpeed: 1, desc: 'Deals splash damage.' },
-        { name: 'Bombard', cost: 60, type: 'tower', damage: 35, range: 3, attackSpeed: 1.5, desc: 'Heavy explosive splash.' },
-        { name: 'Ballista', cost: 55, type: 'tower', damage: 30, range: 6, attackSpeed: 1.1, desc: 'Long-range armor-piercing.' },
-        { name: 'Double Cannon', cost: 120, type: 'tower', damage: 40, range: 3, attackSpeed: 1.2, desc: 'Fires two powerful blasts at once!' },
-        { name: 'Heavy Swordsman', cost: 80, type: 'tower', damage: 40, range: 1, attackSpeed: 1.2, desc: 'Gold-armored melee powerhouse.' },
-        { name: 'Heavy Archer', cost: 70, type: 'tower', damage: 28, range: 4, attackSpeed: 1, desc: 'Blue-armored ranged specialist.' },
+  { name: 'Archer', cost: 15, type: 'tower', damage: 60, range: 3, attackSpeed: 0.5, desc: 'Shoots arrows at range.' },
+  { name: 'Swordsman', cost: 10, type: 'tower', damage: 80, range: 1, attackSpeed: 0.5, desc: 'Runs to slash enemies.' },
+  { name: 'Spearman', cost: 18, type: 'tower', damage: 70, range: 2, attackSpeed: 0.6, desc: 'Stabs enemies at medium range.' },
+  { name: 'Knight', cost: 28, type: 'tower', damage: 65, range: 1, attackSpeed: 0.7, desc: 'Armored melee defender.' },
+  { name: 'Arrow Launcher', cost: 25, type: 'tower', damage: 55, range: 4, attackSpeed: 0.7, desc: 'Launches volleys of arrows.' },
+  { name: 'Crossbow', cost: 30, type: 'tower', damage: 50, range: 5, attackSpeed: 0.7, desc: 'Fires powerful bolts.' },
+  { name: 'Mage', cost: 40, type: 'tower', damage: 45, range: 4, attackSpeed: 0.8, desc: 'Casts fireballs at enemies.' },
+  { name: 'Frost Mage', cost: 42, type: 'tower', damage: 40, range: 4, attackSpeed: 0.7, desc: 'Slows enemies with frost magic.' },
+  { name: 'Cannon', cost: 45, type: 'tower', damage: 38, range: 3, attackSpeed: 1, desc: 'Deals splash damage.' },
+  { name: 'Bombard', cost: 60, type: 'tower', damage: 42, range: 3, attackSpeed: 1.5, desc: 'Heavy explosive splash.' },
+  { name: 'Ballista', cost: 55, type: 'tower', damage: 41, range: 6, attackSpeed: 1.1, desc: 'Long-range armor-piercing.' },
+  { name: 'Double Cannon', cost: 120, type: 'tower', damage: 44, range: 3, attackSpeed: 1.2, desc: 'Fires two powerful blasts at once!' },
+  { name: 'Heavy Swordsman', cost: 80, type: 'tower', damage: 45, range: 1, attackSpeed: 1.2, desc: 'Gold-armored melee powerhouse.' },
+  { name: 'Heavy Archer', cost: 70, type: 'tower', damage: 36, range: 4, attackSpeed: 1, desc: 'Blue-armored ranged specialist.' },
       ],
       buy(cardName) {
         const card = this.cards.find(c => c.name === cardName);

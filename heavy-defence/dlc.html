@@ -10,28 +10,11 @@
     .info { background: #232b3a; border-radius: 8px; padding: 16px; margin-bottom: 18px; font-size: 1.1em; }
     .dlc-list { margin-top: 18px; }
     .dlc-item { background: #181f2a; border-radius: 8px; padding: 12px; margin-bottom: 10px; color: #efc050; font-size: 1em; }
-    /* Download/Paywall Screen */
-    #downloadScreen { position:fixed; top:0; left:0; width:100vw; height:100vh; background:#181818e0; z-index:5000; display:none; align-items:center; justify-content:center; }
-    #downloadScreen .content { background:#232b3a; padding:32px 40px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:340px; }
-    #downloadScreen h2 { color:#efc050; margin-bottom:18px; }
-    #downloadScreen .price { color:#fff; font-size:1.1em; margin-bottom:18px; }
-    #downloadScreen button { padding:10px 28px; border-radius:8px; border:none; font-size:1.1em; cursor:pointer; margin-bottom:10px; }
-    #downloadScreen .btn-game { background:#45b8ac; color:#fff; font-weight:bold; }
-    #downloadScreen .btn-dlc { background:#efc050; color:#222; font-weight:bold; }
-    #downloadScreen #downloadMsg { margin-top:18px; color:#efc050; font-weight:bold; }
+  /* ...existing code... */
   </style>
 </head>
 <body>
-  <!-- Download/Paywall Screen -->
-  <div id="downloadScreen">
-    <div class="content">
-      <h2>Download Heavy Defence</h2>
-      <div class="price">Base Game: <strong>$10</strong><br>DLC: <strong>$5</strong></div>
-      <a href="payment.html"><button class="btn-game">Buy Full Game for $10</button></a>
-      <a href="payment.html"><button class="btn-dlc">Buy DLC for $5</button></a>
-      <div id="downloadMsg"></div>
-    </div>
-  </div>
+  <!-- ...existing code... -->
 
   <div id="root">
     <h1>Heavy Defence DLC</h1>
@@ -68,7 +51,6 @@
       'Archer', 'Swordsman', 'Spearman', 'Knight', 'Arrow Launcher', 'Crossbow', 'Mage', 'Frost Mage', 'Cannon', 'Bombard', 'Ballista', 'Double Cannon', 'Heavy Swordsman', 'Heavy Archer', 'Catapult'
     ];
     function startBattleRoyale() {
-      if (!checkPayment()) return;
       document.getElementById('battleRoyaleSetup').style.display = 'block';
       document.getElementById('battleRoyaleGame').style.display = 'none';
       // Render card selection checkboxes
@@ -327,42 +309,7 @@
       setTimeout(()=>runBattleRoyale(), 1200);
     }
 
-    /* Download/Paywall Screen Script */
-    let hasGame = false, hasDLC = false;
-    function payForGame() {
-      hasGame = true;
-      document.getElementById('downloadMsg').textContent = 'Game purchased! You can now play Heavy Defence.';
-      setTimeout(()=>{
-        document.getElementById('downloadScreen').style.display = 'none';
-      }, 1200);
-    }
-    function payForDLC() {
-      if (!hasGame) {
-        document.getElementById('downloadMsg').textContent = 'You must buy the game first!';
-        return;
-      }
-      hasDLC = true;
-      document.getElementById('downloadMsg').textContent = 'DLC purchased! Extra content unlocked.';
-      setTimeout(()=>{
-        document.getElementById('downloadScreen').style.display = 'none';
-      }, 1200);
-    }
-    // On page load, show paywall
-    window.onload = function() {
-  document.getElementById('downloadScreen').style.display = 'flex';
-    };
-
-    // Lock gameplay and DLC features until payment is made
-    function checkPayment() {
-      // Demo: Always show paywall
-      document.getElementById('downloadScreen').style.display = 'flex';
-      return false;
-    }
-    function checkDLCPayment() {
-      // Demo: Always show paywall
-      document.getElementById('downloadScreen').style.display = 'flex';
-      return false;
-    }
+    // ...existing code...
   </script>
 </body>
 </html>
